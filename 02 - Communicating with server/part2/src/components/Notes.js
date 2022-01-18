@@ -5,7 +5,7 @@ const Notes = ({notes}) => {
     <ul>
     {notes.map(note =>
        <Note key={note.id} content={note.content}/>)}
-  </ul>
+    </ul>
   )
 }
 
