@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import axios from 'axios'
+import telephoneService from './services/telephone'
+
+
 import Persons from './components/Persons'
 import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
@@ -31,27 +33,21 @@ function getNamesToShow(persons, nameKey) {
   return filteredPersons;
 }
 
-
 const App = () => {
 
-  const [persons, setPersons] = useState([
-    { name: 'Arto Hellas',
-      number: '040-1234567' }
-  ]) 
+  const [persons, setPersons] = useState([]) 
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [filter, setNewFilter] = useState('')
 
-  const hook = () => {
-    console.log('effect')
-      axios
-        .get('http://localhost:3001/persons')
-        .then(response => {
-          setPersons(response.data)
-        })
-  }
 
-  useEffect(hook, [])
+  useEffect(() => {
+    telephoneService
+      .getAll()
+      .then(initialPeople => {
+        setPersons(initialPeople)
+      })
+    }, [])
 
   const addNameAndNumber = (event) => {
     event.preventDefault()
@@ -64,11 +60,29 @@ const App = () => {
       window.alert('Missing information!')
     }
     else if (isAlreadyInPhoneBook(persons, personObject)) {
-      window.alert(newName + 'is already in the phonebook!')
+      if (window.confirm(newName + " is already in the phone book, replace the old number?")) {
+        persons.map(person => {
+          if (person.name === newName) {
+            // PUT: update existing
+            telephoneService
+              .update(person.id, personObject)
+              .then(response => {
+                person.number = newNumber
+                setPersons([... persons])
+              })
+          }
+        })
+      }
+
     } else {
-      setPersons(persons.concat(personObject))
-      setNewName('')
-      setNewNumber('')
+      // POST: create new
+      telephoneService
+        .create(personObject)
+        .then(returnedPerson => {
+          setPersons(persons.concat(returnedPerson))
+          setNewName('')
+          setNewNumber('')
+        })
     }
   }
 
@@ -80,11 +94,27 @@ const App = () => {
     setNewNumber(event.target.value)
   }
 
-  const namesToShow = getNamesToShow(persons, filter)
 
   const handleFilterChange = (event) => {
     setNewFilter(event.target.value)
   }
+
+  const deletePerson = (name) => {
+    if (window.confirm("Delete "+ name + "?")) {
+      persons.map(person => {
+        if (person.name === name) {
+          // DELETE
+          telephoneService
+            .deletePerson(person.id)
+            .then(response => {
+              setPersons(persons.filter(person => person.name != name))
+            })
+        }
+      })
+    }
+  }
+
+  const namesToShow = getNamesToShow(persons, filter)
 
   return (
     <div>
@@ -100,7 +130,7 @@ const App = () => {
         numberOnChange = {handleNumberChange}/>
         
       <h2>Numbers</h2>
-      <Persons persons={namesToShow}/>
+      <Persons persons={namesToShow} onClick={deletePerson}/>
     </div>
   )
 }
