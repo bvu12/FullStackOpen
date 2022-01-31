@@ -21,6 +21,7 @@ app.get('/api/notes', (request, response) => {
     })
 })
 
+// Handles HTTP GET requests made to a specific note
 app.get('/api/notes/:id', (request, response) => {
     Note.findById(request.params.id).then(note => {
         response.json(note)
@@ -36,7 +37,7 @@ app.delete('/api/notes/:id', (request, response) => {
     response.status(204).end()
 })
 
-// Post request
+// Post request (create new)
 app.post('/api/notes', (request, response) => {
     const body = request.body
 
@@ -53,6 +54,33 @@ app.post('/api/notes', (request, response) => {
     note.save().then(savedNote => {
         response.json(savedNote)
     })
+})
+
+// Put request
+app.put('/api/notes/:id', (request, response) => {
+    const {id: _id} = request.params;
+    const body = request.body
+
+    if (body.content === undefined) {
+        return response.status(400).json({error: 'content missing'})
+    }
+
+    const note = new Note({
+        _id,
+        content: body.content,
+        important: body.important,
+        date: body.date,
+    })
+
+
+    Note.findByIdAndUpdate(_id, note, (err, updatedNote) => {
+        if (err) {
+            return response.status(400).json({error: 'could not update'})
+        } else {
+            response.json(note)
+        }
+    })
+
 })
 
 const PORT = process.env.PORT

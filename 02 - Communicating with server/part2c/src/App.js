@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react'
 import Note from './components/Note'
-import Notification from './components/Notification'
+import { NotificationError, NotificationConsole} from './components/Notification'
 import noteService from './services/notes'
 
 const Footer = () => {
@@ -23,7 +23,7 @@ const App = () => {
   const [newNote, setNewNote] = useState ('')
   const [showAll, setShowAll] = useState(true)
   const [errorMessage, setErrorMessage] = useState(null)
-
+  const [consoleMessage, setConsoleMessage] = useState(null)
 
   // [] means that the effect is only run along with the first render of the component.
   useEffect(() => {
@@ -48,6 +48,13 @@ const App = () => {
       .then(returnedNote => {
         setNotes(notes.concat(returnedNote))
         setNewNote('')
+
+        setConsoleMessage(
+          `${newNote} added to the server`
+        )
+        setTimeout(() => {
+          setConsoleMessage(null)
+        }, 5000)
       })
       
   }
@@ -88,7 +95,8 @@ const App = () => {
   return (
     <div>
       <h1>Notes</h1>
-      <Notification message={errorMessage} />
+      <NotificationError message={errorMessage} />
+      <NotificationConsole message={consoleMessage} />
       <div>
          {/* On click, switch between showing all and showing important */}
         <button onClick = {() => setShowAll(!showAll)}>
