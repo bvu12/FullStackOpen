@@ -1,20 +1,36 @@
 import React, {useState, useEffect} from 'react'
 import Note from './components/Note'
+import Notification from './components/Notification'
 import noteService from './services/notes'
 
+const Footer = () => {
+  const footerStyle = {
+    color: 'green',
+    fontStyle: 'italic',
+    fontSize: 16
+  }
+
+  return (
+    <div style ={footerStyle}>
+      <br />
+      <em> Note app</em>
+    </div>
+  )
+}
 
 const App = () => {
   const [notes, setNotes] = useState([])
   const [newNote, setNewNote] = useState ('')
   const [showAll, setShowAll] = useState(true)
+  const [errorMessage, setErrorMessage] = useState(null)
 
 
   // [] means that the effect is only run along with the first render of the component.
   useEffect(() => {
     noteService
       .getAll()
-      .then(response => {
-        setNotes(response.data)
+      .then(initialNotes => {
+        setNotes(initialNotes)
       })
   }, [])
 
@@ -29,24 +45,16 @@ const App = () => {
     // POST: create new 
     noteService
       .create(noteObject)
-      .then(response => {
-        setNotes(notes.concat(response.data))
+      .then(returnedNote => {
+        setNotes(notes.concat(returnedNote))
         setNewNote('')
       })
       
   }
 
   const handleNoteChange = (event) => {
-    console.log(event.target.value)
     setNewNote(event.target.value)
   }
-
-  // works on a copy of notes, and this is the variable used to develop the <ul> pieces
-  const notesToShow = showAll
-    ? notes
-    : notes.filter(note => note.important)
-
-
 
   const toggleImportanceOf = (id) => {
     const note = notes.find(n => n.id === id)
@@ -56,16 +64,31 @@ const App = () => {
     // PUT = insert, replace if already exists
     noteService
       .update(id, changedNote)
-      .then(response => {
+      .then(returnedNote => {
         setNotes(notes.map(note => note.id !== id ?
-          note:
-          response.data))
+          note :
+          returnedNote))
       })
+      .catch(error => {
+        setErrorMessage(
+          `Note ${note.content} was already removed from server`
+        )
+        setTimeout(() => {
+          setErrorMessage(null)
+        }, 5000)
+        setNotes(notes.filter(n => n.id !== id))
+      })    
   }
+
+    // works on a copy of notes, and this is the variable used to develop the <ul> pieces
+    const notesToShow = showAll
+    ? notes
+    : notes.filter(note => note.important)
 
   return (
     <div>
       <h1>Notes</h1>
+      <Notification message={errorMessage} />
       <div>
          {/* On click, switch between showing all and showing important */}
         <button onClick = {() => setShowAll(!showAll)}>
@@ -85,6 +108,7 @@ const App = () => {
           onChange = {handleNoteChange}/>
         <button type="submit">save</button>
       </form>
+      <Footer />
     </div>
   )
 }

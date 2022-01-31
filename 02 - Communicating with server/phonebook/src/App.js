@@ -5,6 +5,7 @@ import telephoneService from './services/telephone'
 import Persons from './components/Persons'
 import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
+import { NotificationConsole, NotificationError } from './components/Notification'
 
 
 // Return true if the provided name is already in the phonebook
@@ -39,6 +40,8 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [filter, setNewFilter] = useState('')
+  const [errorMessage, setErrorMessage] = useState(null)
+  const [consoleMessage, setConsoleMessage] = useState(null)
 
 
   useEffect(() => {
@@ -70,6 +73,14 @@ const App = () => {
                 person.number = newNumber
                 setPersons([... persons])
               })
+              .catch(error => {
+                setErrorMessage (
+                  `Failed to update ${person.name} - already removed from server`
+                )
+                setTimeout(() => {
+                  setErrorMessage(null)
+                }, 5000)
+              })
           }
         })
       }
@@ -82,6 +93,14 @@ const App = () => {
           setPersons(persons.concat(returnedPerson))
           setNewName('')
           setNewNumber('')
+
+          setConsoleMessage(
+            `${newName} has been added to the phonebook`
+          )
+          setTimeout(()=>{
+            setConsoleMessage(null)
+          }, 5000)
+
         })
     }
   }
@@ -109,6 +128,15 @@ const App = () => {
             .then(response => {
               setPersons(persons.filter(person => person.name != name))
             })
+            .catch(error => {
+              setErrorMessage (
+                `Failed to delete ${name} - already removed from server`
+              )
+              setTimeout(() => {
+                setErrorMessage(null)
+              }, 5000)
+            })
+            
         }
       })
     }
@@ -119,6 +147,8 @@ const App = () => {
   return (
     <div>
       <h1>Phonebook</h1>
+      <NotificationConsole message={consoleMessage} />
+      <NotificationError message={errorMessage} />
       <Filter value={filter} onChange = {handleFilterChange}/>
 
       <h2>add a new</h2>
