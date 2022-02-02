@@ -1,0 +1,3 @@
+[submodule "03 - Programming a server/Exercises"]
+	path = 03 - Programming a server/Exercises
+	url = git@github.com:bvu12/FSO-part3-exercises.git
