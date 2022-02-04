@@ -44,14 +44,16 @@ const App = () => {
   const [consoleMessage, setConsoleMessage] = useState(null)
 
 
+  // Get the contacts from the backend
   useEffect(() => {
     telephoneService
       .getAll()
-      .then(initialPeople => {
+      .then(initialPeople => { // Set-up the persons object with the contacts from the backend
         setPersons(initialPeople)
       })
     }, [])
 
+    // Event handler when user attempts to add a new contact
   const addNameAndNumber = (event) => {
     event.preventDefault()
     const personObject = {
@@ -59,11 +61,13 @@ const App = () => {
       number: newNumber
     }
 
+    // Some information is missing
     if (newNumber === '' || newName === '') {
       window.alert('Missing information!')
-    }
+    } // If the name is already in the phonebook, ask to replace information
     else if (isAlreadyInPhoneBook(persons, personObject)) {
       if (window.confirm(newName + " is already in the phone book, replace the old number?")) {
+        // Go through the persons object and find the name that matches
         persons.map(person => {
           if (person.name === newName) {
             // PUT: update existing
@@ -85,6 +89,7 @@ const App = () => {
         })
       }
 
+      // Net-new person
     } else {
       // POST: create new
       telephoneService
@@ -105,8 +110,9 @@ const App = () => {
     }
   }
 
+  // Basics setters when user enters in text-field
   const handleNameChange = (event) => {
-      setNewName(event.target.value)
+    setNewName(event.target.value)
   }
 
   const handleNumberChange = (event) => {
@@ -118,14 +124,17 @@ const App = () => {
     setNewFilter(event.target.value)
   }
 
+  // Remove from back-end and front-end
   const deletePerson = (name) => {
     if (window.confirm("Delete "+ name + "?")) {
+      // Loop through the persons object
       persons.map(person => {
         if (person.name === name) {
-          // DELETE
+          // DELETE from backend
           telephoneService
             .deletePerson(person.id)
             .then(response => {
+              // Remove from frontend
               setPersons(persons.filter(person => person.name != name))
             })
             .catch(error => {
@@ -158,7 +167,6 @@ const App = () => {
         nameOnChange = {handleNameChange}
         numberValue = {newNumber}
         numberOnChange = {handleNumberChange}/>
-        
       <h2>Numbers</h2>
       <Persons persons={namesToShow} onClick={deletePerson}/>
     </div>
